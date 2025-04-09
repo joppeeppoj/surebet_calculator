@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surebet Calculator</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --primary-color: #682bd7;
+            --primary-light: #9a67ff;
+            --primary-dark: #4a1d9b;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --bg-color: #f5f5f5;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-light);
+            padding: 15px 0;
+            text-align: center;
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 4px 12px rgba(104, 43, 215, 0.2);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .calculator {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            transition: border 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0e6ff;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary-color);
+            display: none;
+        }
+
+        .result h3 {
+            color: var(--primary-dark);
+            margin-top: 0;
+        }
+
+        .profit {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 500px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Surebet Calculator</h1>
+        </header>
+
+        <div class="calculator">
+            <div class="input-group">
+                <label for="stake">Inzetbedrag (€)</label>
+                <input type="number" id="stake" placeholder="Bijv. 100" min="1">
+            </div>
+
+            <div class="input-group">
+                <label for="odds1">Odds 1</label>
+                <input type="number" id="odds1" placeholder="Bijv. 2.10" step="0.01" min="1.01">
+            </div>
+
+            <div class="input-group">
+                <label for="odds2">Odds 2</label>
+                <input type="number" id="odds2" placeholder="Bijv. 2.10" step="0.01" min="1.01">
+            </div>
+
+            <button onclick="calculateSurebet()">Bereken Surebet</button>
+
+            <div class="result" id="result">
+                <h3>Resultaat</h3>
+                <p><strong>Inzet op Optie 1:</strong> €<span id="bet1">0</span></p>
+                <p><strong>Inzet op Optie 2:</strong> €<span id="bet2">0</span></p>
+                <p><strong>Totale inzet:</strong> €<span id="totalBet">0</span></p>
+                <p><strong>Winst:</strong> <span class="profit">€<span id="profit">0</span></span></p>
+                <p><strong>Winstpercentage:</strong> <span class="profit"><span id="profitPercentage">0</span>%</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateSurebet() {
+            // Haal waarden op
+            const stake = parseFloat(document.getElementById('stake').value);
+            const odds1 = parseFloat(document.getElementById('odds1').value);
+            const odds2 = parseFloat(document.getElementById('odds2').value);
+
+            // Validatie
+            if (isNaN(stake) || isNaN(odds1) || isNaN(odds2)) {
+                alert("Vul alle velden correct in!");
+                return;
+            }
+
+            // Bereken surebet
+            const impliedProb1 = 1 / odds1;
+            const impliedProb2 = 1 / odds2;
+            const totalImpliedProb = impliedProb1 + impliedProb2;
+
+            // Controleer of het een surebet is
+            if (totalImpliedProb >= 1) {
+                alert("Geen surebet mogelijk - totale implied probability is " + (totalImpliedProb * 100).toFixed(2) + "%");
+                return;
+            }
+
+            // Bereken inzetten
+            const bet1 = (stake * impliedProb1) / totalImpliedProb;
+            const bet2 = (stake * impliedProb2) / totalImpliedProb;
+            const totalBet = bet1 + bet2;
+            const profit = stake - totalBet;
+            const profitPercentage = (profit / totalBet) * 100;
+
+            // Toon resultaat
+            document.getElementById('bet1').textContent = bet1.toFixed(2);
+            document.getElementById('bet2').textContent = bet2.toFixed(2);
+            document.getElementById('totalBet').textContent = totalBet.toFixed(2);
+            document.getElementById('profit').textContent = profit.toFixed(2);
+            document.getElementById('profitPercentage').textContent = profitPercentage.toFixed(2);
+
+            document.getElementById('result').style.display = 'block';
+        }
+
+        // Initialiseer Telegram WebApp
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand();
+        Telegram.WebApp.setHeaderColor('#682bd7');
+        Telegram.WebApp.setBackgroundColor('#f5f5f5');
+    </script>
+</body>
+</html>
